@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28917.182
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BulkUpdateMailboxes", "CoreySutton.XrmToolBox.BulkRejectMailboxes\BulkUpdateMailboxes.csproj", "{2839CA82-2C74-4CCF-B025-D37C90829605}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BulkUpdateMailboxes", "BulkUpdateMailboxes\BulkUpdateMailboxes.csproj", "{2839CA82-2C74-4CCF-B025-D37C90829605}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
