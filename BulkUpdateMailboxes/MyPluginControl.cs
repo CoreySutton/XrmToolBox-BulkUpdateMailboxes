@@ -200,7 +200,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                         MailboxId = e.Id,
                         MailboxName = e.GetAttributeValue<string>("name"),
                         Approval = (e.GetAttributeValue<AliasedValue>("User.emailrouteraccessapproval").Value as OptionSetValue).Value,
-                        RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid")
+                        RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid").Id
                     })
                     .ToList()
                 };
@@ -228,7 +228,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     {
                         DataGridViewRow row = rows[i];
                         string mailboxName = row.Cells[2].Value as string;
-                        Guid systemUserId = (row.Cells[4].Value as EntityReference).Id;
+                        Guid systemUserId = Guid.Parse(row.Cells[4].Value.ToString());
 
                         worker.ReportProgress(-1, $"Modifying mailbox {mailboxName} to {approvalStatus}");
 
@@ -266,6 +266,6 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
         public Guid MailboxId { get; set; }
         public string MailboxName { get; set; }
         public int Approval { get; set; }
-        public EntityReference RegardingUserId { get; set; }
+        public Guid RegardingUserId { get; set; }
     }
 }
