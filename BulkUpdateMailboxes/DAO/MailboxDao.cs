@@ -30,6 +30,10 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                 results = _orgSvc.RetrieveMultiple(new QueryExpression("mailbox")
                 {
                     ColumnSet = new ColumnSet(true),
+                    Orders =
+                    {
+                        new OrderExpression("name", OrderType.Ascending)
+                    },
                     PageInfo = new PagingInfo()
                     {
                         Count = PAGE_SIZE,
@@ -37,27 +41,27 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                         PagingCookie = results?.PagingCookie ?? null,
                     },
                     LinkEntities =
+                    {
+                        new LinkEntity()
                         {
-                            new LinkEntity()
+                            LinkFromEntityName = "mailbox",
+                            LinkFromAttributeName = "regardingobjectid",
+                            LinkToEntityName = "systemuser",
+                            LinkToAttributeName = "systemuserid",
+                            Columns = new ColumnSet("emailrouteraccessapproval"),
+                            EntityAlias = "User",
+                            LinkCriteria =
                             {
-                                LinkFromEntityName = "mailbox",
-                                LinkFromAttributeName = "regardingobjectid",
-                                LinkToEntityName = "systemuser",
-                                LinkToAttributeName = "systemuserid",
-                                Columns = new ColumnSet("emailrouteraccessapproval"),
-                                EntityAlias = "User",
-                                LinkCriteria =
+                                Conditions =
                                 {
-                                    Conditions =
-                                    {
-                                        new ConditionExpression(
-                                            "emailrouteraccessapproval",
-                                            ConditionOperator.In,
-                                            approvalStatuses.Select(a => (int) a).ToArray())
-                                    }
+                                    new ConditionExpression(
+                                        "emailrouteraccessapproval",
+                                        ConditionOperator.In,
+                                        approvalStatuses.Select(a => (int) a).ToArray())
                                 }
                             }
                         }
+                    }
                 });
                 entities.AddRange(results.Entities);
                 pageNumber++;
