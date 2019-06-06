@@ -25,7 +25,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
         private void MyPluginControl_Load(object sender, EventArgs e)
         {
             ShowInfoNotification(
-                "To begin click \"Load Mailboxes\", or read the documentation", 
+                "To begin select an action type fro the dropdown then click \"Load Mailboxes\", or read the documentation", 
                 new Uri("https://github.com/CoreySutton"));
 
             // Loads or creates the settings for the plugin

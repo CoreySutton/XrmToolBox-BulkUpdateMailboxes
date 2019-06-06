@@ -40,7 +40,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
             int pageNumber = 1;
             do
             {
-                worker.ReportProgress(-1, $"Processing page {pageNumber} of mailboxes");
+                worker.ReportProgress(-1, $"Processing page {pageNumber} of user mailboxes");
                 results = _orgSvc.RetrieveMultiple(new QueryExpression("mailbox")
                 {
                     ColumnSet = new ColumnSet(true),
@@ -93,7 +93,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
             int pageNumber = 1;
             do
             {
-                worker.ReportProgress(-1, $"Processing page {pageNumber} of mailboxes");
+                worker.ReportProgress(-1, $"Processing page {pageNumber} of queue mailboxes");
                 results = _orgSvc.RetrieveMultiple(new QueryExpression("mailbox")
                 {
                     ColumnSet = new ColumnSet(true),
