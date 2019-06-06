@@ -130,6 +130,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DAO\MailboxDao.cs" />
+    <Compile Include="DAO\QueueDao.cs" />
     <Compile Include="Domain\ApprovalStatus.cs" />
     <Compile Include="DAO\SystemUserDao.cs" />
     <Compile Include="MyPlugin.cs" />
