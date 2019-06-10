@@ -5,7 +5,6 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
 {
     public class QueueDao
     {
-        public Exception CaughtException = null;
         private readonly IOrganizationService _orgSvc;
 
         public QueueDao(IOrganizationService orgSvc)
@@ -13,7 +12,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
             _orgSvc = orgSvc;
         }
 
-        public bool SetMailboxApproval(Guid queueId, ApprovalStatus approvalStatus)
+        public Exception SetMailboxApproval(Guid queueId, ApprovalStatus approvalStatus)
         {
             try
             {
@@ -23,12 +22,11 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     ["emailrouteraccessapproval"] = new OptionSetValue((int)approvalStatus)
                 });
 
-                return true;
+                return null;
             }
             catch (Exception ex)
             {
-                CaughtException = ex;
-                return false;
+                return ex;
             }
         }
     }

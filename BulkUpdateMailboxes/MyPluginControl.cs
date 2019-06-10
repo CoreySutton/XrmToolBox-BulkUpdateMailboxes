@@ -57,6 +57,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                 {
                     GetMailboxes(
                         SetMailboxDataGridView,
+                        ApprovalStatus.PendingApproval,
                         ApprovalStatus.Rejected,
                         ApprovalStatus.Empty);
                 }
@@ -65,8 +66,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     GetMailboxes(
                         SetMailboxDataGridView,
                         ApprovalStatus.Approved,
-                        ApprovalStatus.PendingApproval,
-                        ApprovalStatus.Empty);
+                        ApprovalStatus.PendingApproval);
                 }
                 else
                 {
@@ -188,45 +188,57 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
-            else if (args.Result is IDictionary<string, IList<Entity>> results)
+            else if (args.Result is List<Entity> results)
             {
-                StringBuilder message = new StringBuilder();
-                if (results.ContainsKey("user"))
-                    message.AppendLine($"Found {results["user"].Count()} user mailboxes");
-                if (results.ContainsKey("queue"))
-                    message.AppendLine($"Found {results["queue"].Count()} queue mailboxes");
-                MessageBox.Show(message.ToString());
+                //StringBuilder message = new StringBuilder();
+                //if (results.ContainsKey("user"))
+                //    message.AppendLine($"Found {results["user"].Count()} user mailboxes");
+                //if (results.ContainsKey("queue"))
+                //    message.AppendLine($"Found {results["queue"].Count()} queue mailboxes");
+                //MessageBox.Show(message.ToString());
 
-                List<MailboxRow> rows = new List<MailboxRow>();
+                MessageBox.Show($"Found {results.Count()} mailboxes");
 
-                if (results.ContainsKey("user")) {
-                    rows.AddRange(results["user"]
-                        .Where(e => e.GetAttributeValue<AliasedValue>("User.emailrouteraccessapproval") != null)
+                //List<MailboxRow> rows = new List<MailboxRow>();
+
+                //if (results.ContainsKey("user")) {
+                //    rows.AddRange(results["user"]
+                //        .Where(e => e.GetAttributeValue<AliasedValue>("User.emailrouteraccessapproval") != null)
+                //        .Select(e => new MailboxRow()
+                //        {
+                //            MailboxId = e.Id,
+                //            MailboxName = e.GetAttributeValue<string>("name"),
+                //            Approval = (e.GetAttributeValue<AliasedValue>("User.emailrouteraccessapproval").Value as OptionSetValue).Value,
+                //            RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid"),
+                //            Regarding = "user"
+                //        })
+                //        .ToList());
+                //}
+
+                //if (results.ContainsKey("queue"))
+                //{
+                //    rows.AddRange(results["queue"]
+                //        .Where(e => e.GetAttributeValue<AliasedValue>("Queue.emailrouteraccessapproval") != null)
+                //        .Select(e => new MailboxRow()
+                //        {
+                //            MailboxId = e.Id,
+                //            MailboxName = e.GetAttributeValue<string>("name"),
+                //            Approval = (e.GetAttributeValue<AliasedValue>("Queue.emailrouteraccessapproval").Value as OptionSetValue).Value,
+                //            RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid"),
+                //            Regarding = "queue"
+                //        })
+                //        .ToList());
+                //}
+
+                List<MailboxRow> rows = results
                         .Select(e => new MailboxRow()
                         {
                             MailboxId = e.Id,
                             MailboxName = e.GetAttributeValue<string>("name"),
-                            Approval = (e.GetAttributeValue<AliasedValue>("User.emailrouteraccessapproval").Value as OptionSetValue).Value,
-                            RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid"),
-                            Regarding = "user"
+                            Approval = e.GetAttributeValue<OptionSetValue>("emailrouteraccessapproval").Value,
+                            RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid")
                         })
-                        .ToList());
-                }
-
-                if (results.ContainsKey("queue"))
-                {
-                    rows.AddRange(results["queue"]
-                        .Where(e => e.GetAttributeValue<AliasedValue>("Queue.emailrouteraccessapproval") != null)
-                        .Select(e => new MailboxRow()
-                        {
-                            MailboxId = e.Id,
-                            MailboxName = e.GetAttributeValue<string>("name"),
-                            Approval = (e.GetAttributeValue<AliasedValue>("Queue.emailrouteraccessapproval").Value as OptionSetValue).Value,
-                            RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid"),
-                            Regarding = "queue"
-                        })
-                        .ToList());
-                }
+                        .ToList();
 
                 mailboxDataGridView.DataSource = new BindingSource()
                 {
@@ -258,45 +270,19 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                         string mailboxName = row.Cells[2].Value as string;
                         worker.ReportProgress(-1, $"Modifying mailbox {mailboxName} to {approvalStatus}");
 
-                        string regarding = row.Cells[5].Value as string;
-                        switch (regarding)
+                        if (row.Cells[1].Value is Guid mailboxId)
                         {
-                            case "user": 
-                                {
-                                    if (row.Cells[4].Value is EntityReference systemUserEr)
-                                    {
-                                        SystemUserDao systemUserDao = new SystemUserDao(Service);
-                                        bool success = systemUserDao.SetMailboxApproval(systemUserEr.Id, approvalStatus);
-                                        if (!success && systemUserDao.CaughtException != null)
-                                        {
-                                            LogError($"Failed to approve mailbox");
-                                            LogError(systemUserDao.CaughtException.Message);
-                                            LogError(systemUserDao.CaughtException.StackTrace);
-                                        }
-                                    }
-                                    break;
-                                }
-                                case "queue":
-                                {
-                                    if (row.Cells[4].Value is EntityReference queueEr)
-                                    {
-                                        QueueDao queueDao = new QueueDao(Service);
-                                        bool success = queueDao.SetMailboxApproval(
-                                            queueEr.Id,
-                                            approvalStatus);
+                            MailboxDao mailboxDao = new MailboxDao(Service);
+                            Exception approvalException = mailboxDao.SetApproval(
+                                mailboxId,
+                                approvalStatus);
 
-                                        if (!success && queueDao.CaughtException != null)
-                                        {
-                                            LogError($"Failed to approve mailbox");
-                                            LogError(queueDao.CaughtException.Message);
-                                            LogError(queueDao.CaughtException.StackTrace);
-                                        }
-                                    }
-                                    break;
-                                }
-
-                            default:
-                                break;
+                            if (approvalException != null)
+                            {
+                                LogError($"Failed to approve mailbox");
+                                LogError(approvalException.Message);
+                                LogError(approvalException.StackTrace);
+                            }
                         }
                     }
                 },

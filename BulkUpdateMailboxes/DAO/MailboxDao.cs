@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xrm.Sdk;
 using Microsoft.Xrm.Sdk.Query;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -16,17 +17,39 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
             _orgSvc = orgSvc;
         }
 
-        public IDictionary<string, IList<Entity>> Get(
+        private List<Entity> Get(
             BackgroundWorker worker,
             params ApprovalStatus[] approvalStatuses)
         {
-            IDictionary<string, IList<Entity>> entities = new Dictionary<string, IList<Entity>>();
-            
-            IList<Entity> userMailboxes = GetUserMailboxes(worker, approvalStatuses);
-            IList<Entity> queueMailboxes = GetQueueMailboxes(worker, approvalStatuses);
-            
-            if (userMailboxes != null) entities.Add("user", userMailboxes);
-            if (queueMailboxes != null) entities.Add("queue", queueMailboxes);
+            List<Entity> entities = new List<Entity>();
+            EntityCollection results = null;
+            int pageNumber = 1;
+            do
+            {
+                worker.ReportProgress(-1, $"Processing page {pageNumber} of mailboxes");
+                results = _orgSvc.RetrieveMultiple(new QueryExpression("mailbox")
+                {
+                    ColumnSet = new ColumnSet(true),
+                    PageInfo = new PagingInfo()
+                    {
+                        Count = PAGE_SIZE,
+                        PageNumber = pageNumber,
+                        PagingCookie = results?.PagingCookie ?? null,
+                    },
+                    Criteria =
+                    {
+                        Conditions =
+                        {
+                            new ConditionExpression(
+                                "emailrouteraccessapproval",
+                                ConditionOperator.In,
+                                approvalStatuses.Select(a => (int) a).ToArray())
+                        }
+                    }
+                });
+                entities.AddRange(results.Entities);
+                pageNumber++;
+            } while (results.MoreRecords);
 
             return entities;
         }
@@ -130,6 +153,24 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
             } while (results.MoreRecords);
 
             return entities;
+        }
+
+        public Exception SetApproval(Guid mailboxId, ApprovalStatus approvalStatus)
+        {
+            try
+            {
+                _orgSvc.Update(new Entity("mailbox")
+                {
+                    Id = mailboxId,
+                    ["emailrouteraccessapproval"] = new OptionSetValue((int)approvalStatus)
+                });
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                return ex;
+            }
         }
     }
 }

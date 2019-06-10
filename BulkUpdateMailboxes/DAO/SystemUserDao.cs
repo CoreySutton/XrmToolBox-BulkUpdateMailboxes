@@ -5,7 +5,6 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
 {
     public class SystemUserDao
     {
-        public Exception CaughtException = null;
         private readonly IOrganizationService _orgSvc;
 
         public SystemUserDao(IOrganizationService orgSvc)
@@ -13,7 +12,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
             _orgSvc = orgSvc;
         }
 
-        public bool SetMailboxApproval(Guid systemUserId, ApprovalStatus approvalStatus)
+        public Exception SetMailboxApproval(Guid systemUserId, ApprovalStatus approvalStatus)
         {
             try
             {
@@ -23,12 +22,11 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     ["emailrouteraccessapproval"] = new OptionSetValue((int)approvalStatus)
                 });
 
-                return true;
+                return null;
             }
             catch (Exception ex)
             {
-                CaughtException = ex;
-                return false;
+                return ex;
             }
         }
     }
