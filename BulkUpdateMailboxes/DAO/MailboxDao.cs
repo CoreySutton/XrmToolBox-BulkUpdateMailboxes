@@ -17,7 +17,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
             _orgSvc = orgSvc;
         }
 
-        private List<Entity> Get(
+        public List<Entity> Get(
             BackgroundWorker worker,
             params ApprovalStatus[] approvalStatuses)
         {

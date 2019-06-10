@@ -236,7 +236,8 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                             MailboxId = e.Id,
                             MailboxName = e.GetAttributeValue<string>("name"),
                             Approval = e.GetAttributeValue<OptionSetValue>("emailrouteraccessapproval").Value,
-                            RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid")
+                            RegardingObjectLogicalName = e.GetAttributeValue<EntityReference>("regardingobjectid").LogicalName,
+                            RegardingObjecId = e.GetAttributeValue<EntityReference>("regardingobjectid").Id
                         })
                         .ToList();
 
@@ -319,7 +320,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
         public Guid MailboxId { get; set; }
         public string MailboxName { get; set; }
         public int Approval { get; set; }
-        public Guid RegardingUserId { get; set; }
-        public string Regarding { get; set; }
+        public string RegardingObjectLogicalName { get; set; }
+        public Guid RegardingObjecId { get; set; }
     }
 }
