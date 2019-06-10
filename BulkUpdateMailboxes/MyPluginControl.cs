@@ -7,6 +7,7 @@ using XrmToolBox.Extensibility;
 using Microsoft.Xrm.Sdk;
 using McTools.Xrm.Connection;
 using System.ComponentModel;
+using System.Text;
 
 namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
 {
@@ -24,7 +25,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
         private void MyPluginControl_Load(object sender, EventArgs e)
         {
             ShowInfoNotification(
-                "To begin click \"Load Mailboxes\", or read the documentation", 
+                "To begin select an action type fro the dropdown then click \"Load Mailboxes\", or read the documentation", 
                 new Uri("https://github.com/CoreySutton"));
 
             // Loads or creates the settings for the plugin
@@ -56,6 +57,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                 {
                     GetMailboxes(
                         SetMailboxDataGridView,
+                        ApprovalStatus.PendingApproval,
                         ApprovalStatus.Rejected,
                         ApprovalStatus.Empty);
                 }
@@ -64,8 +66,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     GetMailboxes(
                         SetMailboxDataGridView,
                         ApprovalStatus.Approved,
-                        ApprovalStatus.PendingApproval,
-                        ApprovalStatus.Empty);
+                        ApprovalStatus.PendingApproval);
                 }
                 else
                 {
@@ -187,22 +188,62 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
             }
-            else if (args.Result is IList<Entity> results)
+            else if (args.Result is List<Entity> results)
             {
-                MessageBox.Show($"Found {results.Count} mailboxes");
+                //StringBuilder message = new StringBuilder();
+                //if (results.ContainsKey("user"))
+                //    message.AppendLine($"Found {results["user"].Count()} user mailboxes");
+                //if (results.ContainsKey("queue"))
+                //    message.AppendLine($"Found {results["queue"].Count()} queue mailboxes");
+                //MessageBox.Show(message.ToString());
+
+                MessageBox.Show($"Found {results.Count()} mailboxes");
+
+                //List<MailboxRow> rows = new List<MailboxRow>();
+
+                //if (results.ContainsKey("user")) {
+                //    rows.AddRange(results["user"]
+                //        .Where(e => e.GetAttributeValue<AliasedValue>("User.emailrouteraccessapproval") != null)
+                //        .Select(e => new MailboxRow()
+                //        {
+                //            MailboxId = e.Id,
+                //            MailboxName = e.GetAttributeValue<string>("name"),
+                //            Approval = (e.GetAttributeValue<AliasedValue>("User.emailrouteraccessapproval").Value as OptionSetValue).Value,
+                //            RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid"),
+                //            Regarding = "user"
+                //        })
+                //        .ToList());
+                //}
+
+                //if (results.ContainsKey("queue"))
+                //{
+                //    rows.AddRange(results["queue"]
+                //        .Where(e => e.GetAttributeValue<AliasedValue>("Queue.emailrouteraccessapproval") != null)
+                //        .Select(e => new MailboxRow()
+                //        {
+                //            MailboxId = e.Id,
+                //            MailboxName = e.GetAttributeValue<string>("name"),
+                //            Approval = (e.GetAttributeValue<AliasedValue>("Queue.emailrouteraccessapproval").Value as OptionSetValue).Value,
+                //            RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid"),
+                //            Regarding = "queue"
+                //        })
+                //        .ToList());
+                //}
+
+                List<MailboxRow> rows = results
+                        .Select(e => new MailboxRow()
+                        {
+                            MailboxId = e.Id,
+                            MailboxName = e.GetAttributeValue<string>("name"),
+                            Approval = e.GetAttributeValue<OptionSetValue>("emailrouteraccessapproval").Value,
+                            RegardingObjectLogicalName = e.GetAttributeValue<EntityReference>("regardingobjectid").LogicalName,
+                            RegardingObjecId = e.GetAttributeValue<EntityReference>("regardingobjectid").Id
+                        })
+                        .ToList();
 
                 mailboxDataGridView.DataSource = new BindingSource()
                 {
-                    DataSource = results
-                    .Where(e => e.GetAttributeValue<AliasedValue>("User.emailrouteraccessapproval") != null)
-                    .Select(e => new MailboxRow()
-                    {
-                        MailboxId = e.Id,
-                        MailboxName = e.GetAttributeValue<string>("name"),
-                        Approval = (e.GetAttributeValue<AliasedValue>("User.emailrouteraccessapproval").Value as OptionSetValue).Value,
-                        RegardingUserId = e.GetAttributeValue<EntityReference>("regardingobjectid").Id
-                    })
-                    .ToList()
+                    DataSource = rows
                 };
 
                 TsbUpdateMailboxes.Visible = true;
@@ -228,17 +269,21 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     {
                         DataGridViewRow row = rows[i];
                         string mailboxName = row.Cells[2].Value as string;
-                        Guid systemUserId = Guid.Parse(row.Cells[4].Value.ToString());
-
                         worker.ReportProgress(-1, $"Modifying mailbox {mailboxName} to {approvalStatus}");
 
-                        SystemUserDao systemUserDao = new SystemUserDao(Service);
-                        bool success = systemUserDao.SetMailboxApproval(systemUserId, approvalStatus);
-                        if (!success && systemUserDao.CaughtException != null)
+                        if (row.Cells[1].Value is Guid mailboxId)
                         {
-                            LogError($"Failed to approve mailbox");
-                            LogError(systemUserDao.CaughtException.Message);
-                            LogError(systemUserDao.CaughtException.StackTrace);
+                            MailboxDao mailboxDao = new MailboxDao(Service);
+                            Exception approvalException = mailboxDao.SetApproval(
+                                mailboxId,
+                                approvalStatus);
+
+                            if (approvalException != null)
+                            {
+                                LogError($"Failed to approve mailbox");
+                                LogError(approvalException.Message);
+                                LogError(approvalException.StackTrace);
+                            }
                         }
                     }
                 },
@@ -256,6 +301,15 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Error);
                     }
+
+                    TsbLoadMailboxes.Visible = false;
+                    TsbUpdateMailboxes.Visible = false;
+                    TsbSelectAll.Visible = false;
+                    TsbSelectNone.Visible = false;
+                    mailboxDataGridView.DataSource = null;
+                    TscbActionType.SelectedIndex = 0;
+
+                    MessageBox.Show("Complete");
                 }
             });
         }
@@ -266,6 +320,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
         public Guid MailboxId { get; set; }
         public string MailboxName { get; set; }
         public int Approval { get; set; }
-        public Guid RegardingUserId { get; set; }
+        public string RegardingObjectLogicalName { get; set; }
+        public Guid RegardingObjecId { get; set; }
     }
 }

@@ -3,22 +3,22 @@ using System;
 
 namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
 {
-    public class SystemUserDao
+    public class QueueDao
     {
         private readonly IOrganizationService _orgSvc;
 
-        public SystemUserDao(IOrganizationService orgSvc)
+        public QueueDao(IOrganizationService orgSvc)
         {
             _orgSvc = orgSvc;
         }
 
-        public Exception SetMailboxApproval(Guid systemUserId, ApprovalStatus approvalStatus)
+        public Exception SetMailboxApproval(Guid queueId, ApprovalStatus approvalStatus)
         {
             try
             {
-                _orgSvc.Update(new Entity("systemuser")
+                _orgSvc.Update(new Entity("queue")
                 {
-                    Id = systemUserId,
+                    Id = queueId,
                     ["emailrouteraccessapproval"] = new OptionSetValue((int)approvalStatus)
                 });
 
