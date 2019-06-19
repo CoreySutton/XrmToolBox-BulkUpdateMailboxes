@@ -89,9 +89,12 @@
             // 
             // TstbPageSize
             // 
+            this.TstbPageSize.MaxLength = 4;
             this.TstbPageSize.Name = "TstbPageSize";
             this.TstbPageSize.Size = new System.Drawing.Size(100, 25);
             this.TstbPageSize.Text = "5000";
+            this.TstbPageSize.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TstbPageSize_KeyPress);
+            this.TstbPageSize.TextChanged += new System.EventHandler(this.TstbPageSize_TextChanged);
             // 
             // TscbActionType
             // 
@@ -158,8 +161,8 @@
             // 
             this.mailboxDataGridView.AllowUserToAddRows = false;
             this.mailboxDataGridView.AllowUserToDeleteRows = false;
-            this.mailboxDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-            | System.Windows.Forms.AnchorStyles.Left)
+            this.mailboxDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.mailboxDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.mailboxDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
