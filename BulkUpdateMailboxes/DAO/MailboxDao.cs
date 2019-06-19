@@ -9,12 +9,14 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
 {
     public class MailboxDao
     {
-        private readonly IOrganizationService _orgSvc;
-        private const int PAGE_SIZE = 5000;
+        public int PageSize { get; set; }
 
-        public MailboxDao(IOrganizationService orgSvc)
+        private readonly IOrganizationService _orgSvc;
+
+        public MailboxDao(IOrganizationService orgSvc, int pageSize = 5000)
         {
             _orgSvc = orgSvc;
+            PageSize = pageSize;
         }
 
         public List<Entity> Get(
@@ -32,7 +34,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     ColumnSet = new ColumnSet(true),
                     PageInfo = new PagingInfo()
                     {
-                        Count = PAGE_SIZE,
+                        Count = PageSize,
                         PageNumber = pageNumber,
                         PagingCookie = results?.PagingCookie ?? null,
                     },
@@ -73,7 +75,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     },
                     PageInfo = new PagingInfo()
                     {
-                        Count = PAGE_SIZE,
+                        Count = PageSize,
                         PageNumber = pageNumber,
                         PagingCookie = results?.PagingCookie ?? null,
                     },
@@ -122,7 +124,7 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     ColumnSet = new ColumnSet(true),
                     PageInfo = new PagingInfo()
                     {
-                        Count = PAGE_SIZE,
+                        Count = PageSize,
                         PageNumber = pageNumber,
                         PagingCookie = results?.PagingCookie ?? null,
                     },

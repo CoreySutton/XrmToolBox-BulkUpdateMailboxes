@@ -7,7 +7,7 @@ using XrmToolBox.Extensibility;
 using Microsoft.Xrm.Sdk;
 using McTools.Xrm.Connection;
 using System.ComponentModel;
-using System.Text;
+using System.Drawing;
 
 namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
 {
@@ -162,8 +162,12 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
         private void GetMailboxes(
             Action<RunWorkerCompletedEventArgs> postWorkCallBack,
             params ApprovalStatus[] approvalStatuses)
-        {
+        {            
             MailboxDao mailboxDao = new MailboxDao(Service);
+
+            bool parsed = int.TryParse(TstbPageSize.Text, out int pageSize);
+            if (parsed) mailboxDao.PageSize = pageSize;
+
             WorkAsync(new WorkAsyncInfo
             {
                 Message = "Getting mailboxes",
@@ -312,6 +316,35 @@ namespace CoreySutton.XrmToolBox.BulkUpdateMailboxes
                     MessageBox.Show("Complete");
                 }
             });
+        }
+
+        private void TstbPageSize_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void TstbPageSize_TextChanged(object sender, EventArgs e)
+        {
+           HideNotification();
+
+            bool parsed = int.TryParse(TstbPageSize.Text, out int pageSize);
+
+            if (!parsed) { 
+                TstbPageSize.ForeColor = Color.Red;
+                ShowErrorNotification("Page Size is not a valid number", null);
+            }
+            else if (pageSize < 1 || pageSize > 5000)
+            {
+                TstbPageSize.ForeColor = Color.Red;
+                ShowErrorNotification("Page Size must be between 0 and 5000", null);
+            }
+            else
+            {
+                TstbPageSize.ForeColor = Color.Black;
+            }
         }
     }
 
